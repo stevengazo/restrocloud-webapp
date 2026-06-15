@@ -1,54 +1,42 @@
-import { Box, Button, Paper, Stack, Switch, Typography } from '@mui/material'
+import { Box, Stack } from '@mui/material'
+import HeroPanel from '../components/organisms/HeroPanel'
+import SettingsPanel from '../components/organisms/SettingsPanel'
+
+const groups = [
+  {
+    title: 'Apariencia',
+    description: 'Elige preferencias de diseño, modo de tema y densidad de la interfaz.',
+    options: [{ label: 'Modo compacto', defaultChecked: true }],
+  },
+  {
+    title: 'Preferencias',
+    description: 'Activa los ajustes rápidos de notificaciones, privacidad y cuenta.',
+    options: [{ label: 'Notificaciones', defaultChecked: true }],
+  },
+]
 
 export default function Settings() {
   return (
     <Stack spacing={4}>
-      <Paper elevation={3} sx={{ p: 4, borderRadius: 4, bgcolor: 'background.paper' }}>
-        <Typography variant="h4" fontWeight={700} gutterBottom>
-          Settings Overview
-        </Typography>
-        <Typography color="text.secondary" paragraph>
-          This page is designed for configuring your application preferences. Use the controls below to model real user settings.
-        </Typography>
-      </Paper>
-
+      <HeroPanel
+        title="Configuración"
+        description="Esta página permite configurar las preferencias de la aplicación. Usa los controles para modelar ajustes reales de usuario."
+      />
       <Box sx={{ display: 'grid', gap: 3, gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
-        <Paper elevation={1} sx={{ p: 4, borderRadius: 3 }}>
-          <Typography variant="h6" fontWeight={600} gutterBottom>
-            Appearance
-          </Typography>
-          <Typography color="text.secondary" mb={3}>
-            Choose layout preferences, theme mode, and interface density for your users.
-          </Typography>
-          <Stack direction="row" alignItems="center" justifyContent="space-between">
-            <Typography>Compact mode</Typography>
-            <Switch defaultChecked />
-          </Stack>
-        </Paper>
-
-        <Paper elevation={1} sx={{ p: 4, borderRadius: 3 }}>
-          <Typography variant="h6" fontWeight={600} gutterBottom>
-            Preferences
-          </Typography>
-          <Typography color="text.secondary" mb={3}>
-            Prepare the settings screen with quick toggles for notifications, privacy, and account details.
-          </Typography>
-          <Stack direction="row" alignItems="center" justifyContent="space-between">
-            <Typography>Notifications</Typography>
-            <Switch defaultChecked />
-          </Stack>
-        </Paper>
+        {groups.map((group) => (
+          <SettingsPanel
+            key={group.title}
+            title={group.title}
+            description={group.description}
+            options={group.options}
+          />
+        ))}
       </Box>
-
-      <Paper elevation={0} sx={{ p: 4, borderRadius: 4, border: 1, borderColor: 'divider', bgcolor: 'background.default' }}>
-        <Typography variant="h6" fontWeight={600} gutterBottom>
-          Save Changes
-        </Typography>
-        <Typography color="text.secondary" paragraph>
-          Use the Save button to persist user settings and keep the experience polished.
-        </Typography>
-        <Button variant="contained">Save settings</Button>
-      </Paper>
+      <HeroPanel
+        title="Guardar cambios"
+        description="Usa el botón Guardar para persistir los ajustes y mantener la experiencia pulida."
+        actionLabel="Guardar ajustes"
+      />
     </Stack>
   )
 }

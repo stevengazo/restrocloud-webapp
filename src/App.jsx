@@ -1,122 +1,64 @@
-import { useMemo, useState } from 'react'
-import { Brightness4, Brightness7, Home as HomeIcon, LockOpen, Settings as SettingsIcon } from '@mui/icons-material'
-import {
-  Box,
-  CssBaseline,
-  IconButton,
-  List,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Paper,
-  ThemeProvider,
-  Typography,
-  createTheme,
-  Divider,
-} from '@mui/material'
+import { useState } from 'react'
+import { Home as HomeIcon, Settings as SettingsIcon } from '@mui/icons-material'
+import DashboardLayout from './components/templates/DashboardLayout'
 import Home from './pages/Home'
 import Login from './pages/Login'
+import Register from './pages/Register'
 import Settings from './pages/Settings'
+import * as authService from './services/authService'
 
-const pages = {
+const PAGES = {
   HOME: 'home',
   SETTINGS: 'settings',
-  LOGIN: 'login',
 }
 
-const menuItems = [
-  { id: pages.HOME, label: 'Home', icon: <HomeIcon /> },
-  { id: pages.SETTINGS, label: 'Settings', icon: <SettingsIcon /> },
-  { id: pages.LOGIN, label: 'Login', icon: <LockOpen /> },
+const navItems = [
+  { id: PAGES.HOME, label: 'Inicio', icon: <HomeIcon /> },
+  { id: PAGES.SETTINGS, label: 'Ajustes', icon: <SettingsIcon /> },
 ]
 
-function App() {
-  const [page, setPage] = useState(pages.HOME)
-  const [mode, setMode] = useState('dark')
+const pageComponents = {
+  [PAGES.HOME]: <Home />,
+  [PAGES.SETTINGS]: <Settings />,
+}
 
-  const theme = useMemo(
-    () =>
-      createTheme({
-        palette: {
-          mode,
-          primary: {
-            main: '#5b7dd7',
-          },
-          background: {
-            default: mode === 'light' ? '#f7f8fc' : '#090b15',
-            paper: mode === 'light' ? '#ffffff' : '#111827',
-          },
-        },
-        typography: {
-          fontFamily: 'Inter, system-ui, sans-serif',
-        },
-      }),
-    [mode],
-  )
+function App() {
+  // Restaura la sesión existente desde el servicio (localStorage hoy, API mañana).
+  const [user, setUser] = useState(() => authService.getCurrentUser())
+  const [authView, setAuthView] = useState('login') // 'login' | 'register'
+  const [page, setPage] = useState(PAGES.HOME)
+
+  // El login redirige al home privado autenticando al usuario.
+  const handleLogin = async (credentials) => {
+    const loggedUser = await authService.login(credentials)
+    setUser(loggedUser)
+    setPage(PAGES.HOME)
+  }
+
+  // Tras registrar, inicia sesión automáticamente y entra al home privado.
+  const handleRegister = async (data) => {
+    await authService.register(data)
+    await handleLogin({ username: data.username, password: data.password })
+  }
+
+  const handleLogout = async () => {
+    await authService.logout()
+    setUser(null)
+    setAuthView('login')
+  }
+
+  if (!user) {
+    return authView === 'register' ? (
+      <Register onRegister={handleRegister} onSwitchToLogin={() => setAuthView('login')} />
+    ) : (
+      <Login onLogin={handleLogin} onSwitchToRegister={() => setAuthView('register')} />
+    )
+  }
 
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default', color: 'text.primary' }}>
-        <Box
-          component="aside"
-          sx={{
-            width: { xs: '100%', sm: 280 },
-            borderRight: 1,
-            borderColor: 'divider',
-            bgcolor: 'background.paper',
-            px: 3,
-            py: 4,
-            position: 'sticky',
-            top: 0,
-            alignSelf: 'flex-start',
-            height: { xs: 'auto', sm: '100vh' },
-          }}
-        >
-          <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
-            <Box>
-              <Typography variant="overline" color="text.secondary" display="block" letterSpacing={2}>
-                RestroCloud
-              </Typography>
-              <Typography variant="h5" fontWeight={700}>
-                Material Dashboard
-              </Typography>
-            </Box>
-            <IconButton onClick={() => setMode((current) => (current === 'light' ? 'dark' : 'light'))} color="inherit">
-              {mode === 'light' ? <Brightness7 /> : <Brightness4 />}
-            </IconButton>
-          </Box>
-          <Divider sx={{ mb: 3 }} />
-          <List disablePadding>
-            {menuItems.map((item) => (
-              <ListItemButton
-                key={item.id}
-                selected={page === item.id}
-                onClick={() => setPage(item.id)}
-                sx={{ borderRadius: 2, mb: 1 }}
-              >
-                <ListItemIcon sx={{ color: 'primary.main' }}>{item.icon}</ListItemIcon>
-                <ListItemText primary={item.label} />
-              </ListItemButton>
-            ))}
-          </List>
-          <Paper elevation={0} variant="outlined" sx={{ mt: 4, p: 3, borderRadius: 3, bgcolor: 'background.default' }}>
-            <Typography variant="subtitle2" gutterBottom>
-              Quick tip
-            </Typography>
-            <Typography color="text.secondary" variant="body2">
-              Use the sidebar navigation to switch pages and toggle theme mode for the layout.
-            </Typography>
-          </Paper>
-        </Box>
-
-        <Box component="main" sx={{ flex: 1, p: { xs: 3, sm: 4 } }}>
-          {page === pages.HOME && <Home />}
-          {page === pages.SETTINGS && <Settings />}
-          {page === pages.LOGIN && <Login />}
-        </Box>
-      </Box>
-    </ThemeProvider>
+    <DashboardLayout navItems={navItems} activeId={page} onSelect={setPage} onLogout={handleLogout}>
+      {pageComponents[page]}
+    </DashboardLayout>
   )
 }
 
